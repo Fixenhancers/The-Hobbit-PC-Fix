@@ -24,7 +24,6 @@
 #include <iostream> // chip  
 #include <vector> // chip
 #include <Psapi.h> // chip
-#include <conio.h> //chip
 
 
 
@@ -59,9 +58,7 @@ bool bDoNotNotifyOnTaskSwitch;
 bool bDisplayFPSCounter;
 float fFPSLimit;
 int nFullScreenRefreshRateInHz;
-bool toggle = false; // chip
-int customHotkey = '9'; // chip
-bool isMouseButton = false; // chip
+
 
 // Function prototype for the hotkey thread chip
 DWORD WINAPI HotkeyThread(LPVOID lpParam);
@@ -72,70 +69,7 @@ char WinDir[MAX_PATH + 1];
 // WORD classAtom, ULONG_PTR WndProcPtr
 std::vector<std::pair<WORD, ULONG_PTR>> WndProcList;
 
-//=======================================================================================================================================================================================
-// chip - toggle where user chooses input with message box confirmation 
 
-void ShowMessageBox(const std::string& message) {
-    MessageBox(NULL, message.c_str(), "Hotkey Notification", MB_OK | MB_ICONINFORMATION);
-}
-
-void SetCustomHotkey() {
-    ShowMessageBox("Press the OK button, then press any keyboard or mouse button. Which will set it as the new hotkey for the FPS toggle betweeen 30 or 60 FPS in game. You will get another window to confirm your key choice...");
-
-    while (true) {
-        // Check for keyboard input
-        for (int key = 0x08; key <= 0xFF; key++) {
-            if (GetAsyncKeyState(key) & 0x8000) {
-                customHotkey = key;
-                isMouseButton = false;
-
-                char keyName[256];
-                GetKeyNameText(MapVirtualKey(key, 0) << 16, keyName, 256);
-
-                std::string message = "Custom FPS toggle hotkey set to key: " + std::string(keyName);
-                ShowMessageBox(message);
-                return;
-            }
-        }
-
-        // Check for mouse button input
-        if (GetAsyncKeyState(VK_LBUTTON) & 0x8000) {
-            customHotkey = VK_LBUTTON;
-            isMouseButton = true;
-            ShowMessageBox("Custom hotkey set to: Left Mouse Button");
-            return;
-        }
-        else if (GetAsyncKeyState(VK_RBUTTON) & 0x8000) {
-            customHotkey = VK_RBUTTON;
-            isMouseButton = true;
-            ShowMessageBox("Custom hotkey set to: Right Mouse Button");
-            return;
-        }
-        else if (GetAsyncKeyState(VK_MBUTTON) & 0x8000) {
-            customHotkey = VK_MBUTTON;
-            isMouseButton = true;
-            ShowMessageBox("Custom hotkey set to: Middle Mouse Button");
-            return;
-        }
-        else if (GetAsyncKeyState(VK_XBUTTON1) & 0x8000) {
-            customHotkey = VK_XBUTTON1;
-            isMouseButton = true;
-            ShowMessageBox("Custom hotkey set to: X Button 1");
-            return;
-        }
-        else if (GetAsyncKeyState(VK_XBUTTON2) & 0x8000) {
-            customHotkey = VK_XBUTTON2;
-            isMouseButton = true;
-            ShowMessageBox("Custom hotkey set to: X Button 2");
-            return;
-        }
-
-        Sleep(100);
-    }
-}
-
-// chip - toggle where user chooses input with message box confirmation 
-//=======================================================================================================================================================================================
 
 //=======================================================================================================================================================================================
 // chip - 1: fps 60
@@ -1082,14 +1016,11 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
             //========================================================================================================================
             //chip
 
-           
-            SetCustomHotkey();
+           PerformHexEdits1();
 
             PerformHexEdits();
             
 
-            // Create a thread to handle hotkey functionality
-            CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
             //chip
             //========================================================================================================================
@@ -1210,34 +1141,6 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
     return true;
 }
-
-DWORD WINAPI HotkeyThread(LPVOID lpParam) {
-    while (true) {
-        // Check if the custom hotkey is pressed
-        if (GetAsyncKeyState(customHotkey) & 0x8000) {
-            // Debounce the key press
-            Sleep(200);
-
-            // Toggle the boolean flag
-            toggle = !toggle;
-            std::string message = "Toggled to: " + std::string(toggle ? "ON" : "OFF");
-            
-            // Perform hex edits based on the toggle flag
-            if (toggle) {
-                PerformHexEdits2();
-            }
-            else {
-                PerformHexEdits1();
-            }
-        }
-
-        // Sleep to prevent CPU overload
-        Sleep(100);
-    }
-
-    return 0;
-}
-
 
 int WINAPI Direct3D8EnableMaximizedWindowedModeShim(BOOL mEnable)
 {
